@@ -1,0 +1,79 @@
+{
+  "name": "semifluid",
+  "displayName": "Semifluid",
+  "archetype": "tool-only",
+  "mcpServerUrl": "https://api.semifluid.ai/mcp",
+  "oauthProtectedResourceMetadataUrl": "https://api.semifluid.ai/.well-known/oauth-protected-resource",
+  "authorizationServer": "https://api.semifluid.ai/api/auth",
+  "description": "Search, inspect, and manage Semifluid collections, schemas, records, attachments, and record suggestions through MCP.",
+  "notes": [
+    "ChatGPT does not consume Codex SKILL.md files.",
+    "This file is a maintainer-facing package artifact for ChatGPT developer-mode setup and submission prep.",
+    "The live MCP server descriptors are the source of truth for ChatGPT behavior."
+  ],
+  "tools": [
+    {
+      "name": "search",
+      "access": "read-only",
+      "scopes": ["collections:read", "records:read"],
+      "purpose": "Search Semifluid collections by name and records by content."
+    },
+    {
+      "name": "fetch",
+      "access": "read-only",
+      "scopes": ["collections:read", "records:read"],
+      "purpose": "Fetch full text for a Semifluid collection or record returned by search."
+    },
+    {
+      "name": "semifluid_collections",
+      "access": "mutating",
+      "scopes": ["collections:read", "collections:write"],
+      "purpose": "List, create, inspect, update, or delete Semifluid collections."
+    },
+    {
+      "name": "semifluid_schema",
+      "access": "mutating",
+      "scopes": ["collections:read", "fields:write", "views:write"],
+      "purpose": "Create, update, delete, or reorder fields and collection views."
+    },
+    {
+      "name": "semifluid_records",
+      "access": "mutating",
+      "scopes": ["records:read", "records:write"],
+      "purpose": "List, query, aggregate, create, update, upsert, import, or delete records."
+    },
+    {
+      "name": "semifluid_attachments",
+      "access": "mutating",
+      "scopes": ["attachments:read", "attachments:write"],
+      "purpose": "Upload attachments or retrieve authorized attachment metadata or content."
+    },
+    {
+      "name": "semifluid_suggestions",
+      "access": "mutating",
+      "scopes": ["records:read", "records:write"],
+      "purpose": "List, create, inspect, approve, or reject record suggestions."
+    }
+  ],
+  "developerMode": {
+    "setup": [
+      "Enable Developer Mode in ChatGPT Settings -> Apps & Connectors -> Advanced settings.",
+      "Create a new app/connector for the remote MCP server URL.",
+      "Paste https://api.semifluid.ai/mcp.",
+      "Complete OAuth when prompted.",
+      "Refresh app metadata after server-side descriptor changes."
+    ]
+  },
+  "submission": {
+    "mcpServerType": "universal",
+    "mcpServerUrl": "https://api.semifluid.ai/mcp",
+    "requiresScreenshots": false,
+    "missingBeforePublicSubmission": [
+      "Final app description",
+      "Privacy policy URL",
+      "Support URL",
+      "Production golden prompt results",
+      "Review-safe OAuth test account, if required"
+    ]
+  }
+}
