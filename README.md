@@ -61,6 +61,6 @@ The hosted Semifluid MCP currently exposes these tools:
 | `semifluid_attachments` | Mutating | Upload attachments or retrieve authorized attachment metadata/content. |
 | `semifluid_suggestions` | Mutating | List, create, inspect, approve, or reject record suggestions. |
 
-The Codex skill currently directs agents toward the read-only `search` and `fetch` workflow by
-default. The other tools are available from the MCP server for clients that intentionally support
-Semifluid write operations and the required OAuth scopes.
+The Codex skill directs agents to use `search` and `fetch` for retrieval, and the grouped tools for
+intentional collection, schema, record, attachment, and suggestion operations with the required
+OAuth scopes.
