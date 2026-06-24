@@ -1,0 +1,20 @@
+{
+  "name": "semifluid-integrations",
+  "interface": {
+    "displayName": "Semifluid Integrations"
+  },
+  "plugins": [
+    {
+      "name": "semifluid",
+      "source": {
+        "source": "local",
+        "path": "./plugins/semifluid"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

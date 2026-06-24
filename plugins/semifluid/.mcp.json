@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "semifluid": {
+      "type": "http",
+      "url": "https://api.semifluid.ai/mcp"
+    }
+  }
+}

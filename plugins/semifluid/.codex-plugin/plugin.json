@@ -1,0 +1,29 @@
+{
+  "name": "semifluid",
+  "version": "0.2.0+codex.20260624183857",
+  "description": "Search and fetch Semifluid collections and records from Codex through the Semifluid MCP.",
+  "author": {
+    "name": "Local developer"
+  },
+  "homepage": "https://github.com/jpamorgan/semifluid-integrations",
+  "repository": "https://github.com/jpamorgan/semifluid-integrations",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Semifluid",
+    "shortDescription": "Search and fetch Semifluid collections and records through MCP.",
+    "longDescription": "Adds Semifluid MCP guidance for read-only search and fetch workflows over collections and records.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Search"
+    ],
+    "defaultPrompt": [
+      "Find Semifluid records about this topic.",
+      "Search my Semifluid collections.",
+      "Summarize this Semifluid record."
+    ]
+  }
+}
