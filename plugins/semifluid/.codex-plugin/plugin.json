@@ -1,7 +1,7 @@
 {
   "name": "semifluid",
-  "version": "0.2.0+codex.20260624183857",
-  "description": "Search and fetch Semifluid collections and records from Codex through the Semifluid MCP.",
+  "version": "0.2.0+codex.20260624213715",
+  "description": "Search, inspect, and manage Semifluid collections, schemas, records, attachments, and suggestions from Codex through MCP.",
   "author": {
     "name": "Local developer"
   },
@@ -11,19 +11,21 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Semifluid",
-    "shortDescription": "Search and fetch Semifluid collections and records through MCP.",
-    "longDescription": "Adds Semifluid MCP guidance for read-only search and fetch workflows over collections and records.",
+    "shortDescription": "Search and manage Semifluid data through MCP.",
+    "longDescription": "Adds Semifluid MCP guidance for search, fetch, and grouped collection, schema, record, attachment, and suggestion operations.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
       "Read",
-      "Search"
+      "Search",
+      "Write"
     ],
     "defaultPrompt": [
       "Find Semifluid records about this topic.",
       "Search my Semifluid collections.",
-      "Summarize this Semifluid record."
+      "Summarize this Semifluid record.",
+      "Create a Semifluid record in this collection."
     ]
   }
 }
