@@ -1,6 +1,6 @@
 {
   "name": "semifluid",
-  "version": "0.2.0+codex.20260624213715",
+  "version": "0.2.0+codex.20260625191222",
   "description": "Search, inspect, and manage Semifluid collections, schemas, records, attachments, and suggestions from Codex through MCP.",
   "author": {
     "name": "Local developer"
@@ -24,8 +24,7 @@
     "defaultPrompt": [
       "Find Semifluid records about this topic.",
       "Search my Semifluid collections.",
-      "Summarize this Semifluid record.",
-      "Create a Semifluid record in this collection."
+      "Summarize this Semifluid record."
     ]
   }
 }
