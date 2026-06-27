@@ -1,6 +1,6 @@
 # Semifluid Integrations
 
-Codex plugin package and ChatGPT app package for the hosted Semifluid MCP endpoint.
+Codex plugin package and ChatGPT app package for Semifluid.
 
 ## Repository Layout
 
@@ -11,8 +11,10 @@ is needed.
 .agents/plugins/marketplace.json      # Codex marketplace catalog
 plugins/semifluid/                    # Installable Codex plugin bundle
   .codex-plugin/plugin.json           # Required plugin manifest
-  .mcp.json                           # Bundled Semifluid MCP server config
-  skills/semifluid/SKILL.md           # Codex agent guidance
+  .mcp.json                           # OAuth bootstrap for plugin authentication
+  skills/semifluid/SKILL.md           # Codex API-first agent guidance
+  scripts/semifluid_api.py            # Bundled Semifluid HTTP API helper
+  references/api-reference.md         # Local API endpoint reference
 apps/chatgpt/                         # ChatGPT app setup and review notes
 ```
 
@@ -39,8 +41,8 @@ codex plugin marketplace add /Users/jpamorgan/Development/semifluid-integrations
 Then restart Codex or open the plugin directory, choose the `Semifluid Integrations` marketplace,
 and install `Semifluid`.
 
-After installation, start a new Codex thread so the bundled skill and MCP server are loaded in the
-thread context.
+After installation, authenticate with Semifluid and start a new Codex thread so the bundled skill is
+loaded in the thread context.
 
 ## Verify Installation
 
@@ -50,14 +52,14 @@ In a new Codex thread, ask for a Semifluid operation such as:
 Search my Semifluid collections for customer records.
 ```
 
-The thread should load the `semifluid` skill and use the bundled MCP server at:
+The thread should load the `semifluid` skill and use the bundled API helper:
 
-```text
-https://api.semifluid.ai/mcp
+```bash
+python3 scripts/semifluid_api.py get /v1/collections
 ```
 
-If the Semifluid MCP tools are not visible, confirm the plugin is enabled in Codex, then restart the
-thread after enabling it.
+If the helper reports a missing OAuth token, reconnect or reauthorize the plugin in Codex, then
+retry from a new thread.
 
 ## Semifluid Codex Plugin
 
@@ -66,8 +68,9 @@ The Codex plugin bundle is in `plugins/semifluid`.
 It provides:
 
 - A plugin manifest with install-surface metadata.
-- A bundled Semifluid MCP server declaration for `https://api.semifluid.ai/mcp`.
-- A Codex skill that tells agents when and how to use the Semifluid MCP tools.
+- A bundled Semifluid API helper copied from the v1 API skill and updated for OAuth bearer auth.
+- A Codex skill that tells agents when and how to use direct Semifluid HTTP API calls.
+- A Semifluid MCP declaration retained as the plugin OAuth bootstrap.
 
 When changing the plugin, keep the manifest name, folder name, and marketplace entry name aligned:
 `semifluid`.
@@ -87,23 +90,19 @@ Use this MCP server URL when connecting the app in ChatGPT developer mode:
 https://api.semifluid.ai/mcp
 ```
 
-## MCP Tool Surface
+## Semifluid API Helper
 
-The hosted Semifluid MCP currently exposes these tools:
+The Codex plugin should operate through:
 
-| Tool | Access | Purpose |
-| --- | --- | --- |
-| `search` | Read-only | Search Semifluid collections by name and records by content. |
-| `fetch` | Read-only | Fetch full text for a Semifluid collection or record returned by `search`. |
-| `semifluid_collections` | Mutating | List, create, inspect, update, or delete Semifluid collections. |
-| `semifluid_schema` | Mutating | Create, update, delete, or reorder fields and collection views. |
-| `semifluid_records` | Mutating | List, query, aggregate, create, update, upsert, import, or delete records. |
-| `semifluid_attachments` | Mutating | Upload attachments or retrieve authorized attachment metadata/content. |
-| `semifluid_suggestions` | Mutating | List, create, inspect, approve, or reject record suggestions. |
+```bash
+python3 plugins/semifluid/scripts/semifluid_api.py health
+python3 plugins/semifluid/scripts/semifluid_api.py get /v1/collections
+python3 plugins/semifluid/scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
+python3 plugins/semifluid/scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json @query.json
+```
 
-The Codex skill directs agents to use `search` and `fetch` for retrieval, and the grouped tools for
-intentional collection, schema, record, attachment, and suggestion operations with the required
-OAuth scopes.
+The helper sends bearer auth by default and reads the OAuth token from
+`SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
 ## Maintenance Checklist
 
@@ -112,6 +111,8 @@ OAuth scopes.
 - Keep `skills/`, `.mcp.json`, `.app.json`, `hooks/`, and `assets/` at the plugin root.
 - Keep only `.codex-plugin/plugin.json` inside `.codex-plugin/`.
 - Use relative manifest paths that start with `./`.
-- Keep `.mcp.json` in the `mcpServers` companion shape validated by the local Codex plugin tooling.
+- Keep `.mcp.json` in the `mcpServers` companion shape while it is needed for plugin OAuth
+  bootstrap.
 - Keep marketplace `source.path` relative to the repository root.
-- Restart Codex and test in a new thread after plugin metadata, skill, or MCP config changes.
+- Restart Codex and test in a new thread after plugin metadata, skill, helper, or auth config
+  changes.
