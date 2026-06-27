@@ -12,8 +12,8 @@ is needed.
 plugins/semifluid/                    # Installable Codex plugin bundle
   .codex-plugin/plugin.json           # Required plugin manifest
   .mcp.json                           # OAuth bootstrap for plugin authentication
-  skills/semifluid/SKILL.md           # Codex API-first agent guidance
-  scripts/semifluid_api.py            # Bundled Semifluid HTTP API helper
+  skills/semifluid/SKILL.md           # Codex Semifluid agent guidance
+  scripts/semifluid_api.py            # HTTP helper for public endpoints and explicit credentials
   references/api-reference.md         # Local API endpoint reference
 apps/chatgpt/                         # ChatGPT app setup and review notes
 ```
@@ -52,13 +52,10 @@ In a new Codex thread, ask for a Semifluid operation such as:
 Search my Semifluid collections for customer records.
 ```
 
-The thread should load the `semifluid` skill and use the bundled API helper:
+The thread should load the `semifluid` skill and use the Semifluid plugin tools for authenticated
+operations.
 
-```bash
-python3 scripts/semifluid_api.py get /v1/collections
-```
-
-If the helper reports a missing OAuth token, reconnect or reauthorize the plugin in Codex, then
+If Semifluid plugin tools report `Auth required`, reconnect or reauthorize the plugin in Codex, then
 retry from a new thread.
 
 ## Semifluid Codex Plugin
@@ -68,8 +65,9 @@ The Codex plugin bundle is in `plugins/semifluid`.
 It provides:
 
 - A plugin manifest with install-surface metadata.
-- A bundled Semifluid API helper copied from the v1 API skill and updated for OAuth bearer auth.
-- A Codex skill that tells agents when and how to use direct Semifluid HTTP API calls.
+- A bundled Semifluid API helper copied from the v1 API skill for public endpoints and explicit
+  compatibility credentials.
+- A Codex skill that tells agents when and how to use Semifluid plugin tools and the HTTP helper.
 - A Semifluid MCP declaration retained as the plugin OAuth bootstrap.
 
 When changing the plugin, keep the manifest name, folder name, and marketplace entry name aligned:
@@ -101,8 +99,10 @@ python3 plugins/semifluid/scripts/semifluid_api.py get /v1/collections/{collecti
 python3 plugins/semifluid/scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json @query.json
 ```
 
-The helper sends bearer auth by default and reads the OAuth token from
-`SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
+Codex MCP OAuth authenticates plugin tool calls but does not expose plugin access tokens to helper
+subprocesses. For direct shell API calls, set `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or
+`CODEX_SEMIFLUID_ACCESS_TOKEN` explicitly. API-key auth is available only as compatibility mode with
+`SEMIFLUID_API_KEY --auth-header x-api-key`.
 
 ## Maintenance Checklist
 

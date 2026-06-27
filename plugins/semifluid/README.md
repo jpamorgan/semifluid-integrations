@@ -6,8 +6,9 @@ This is the installable Codex plugin bundle for Semifluid.
 
 - `.codex-plugin/plugin.json`: required Codex plugin manifest.
 - `.mcp.json`: OAuth bootstrap for Semifluid plugin authentication.
-- `skills/semifluid/SKILL.md`: Codex guidance for API-first Semifluid retrieval and mutations.
-- `scripts/semifluid_api.py`: standard-library Semifluid HTTP API helper.
+- `skills/semifluid/SKILL.md`: Codex guidance for Semifluid retrieval and mutations.
+- `scripts/semifluid_api.py`: standard-library Semifluid HTTP API helper for public endpoints and
+  explicit compatibility credentials.
 - `references/api-reference.md`: local endpoint reference copied from the v1 API skill.
 
 ## Install
@@ -37,8 +38,10 @@ python3 scripts/semifluid_api.py get /v1/collections
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 ```
 
-The helper sends `Authorization: Bearer <token>` by default and reads the OAuth token from
-`SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
+Codex MCP OAuth authenticates plugin tool calls but does not expose plugin access tokens to helper
+subprocesses. For direct shell API calls, set `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or
+`CODEX_SEMIFLUID_ACCESS_TOKEN` explicitly. API-key auth is available only as compatibility mode with
+`SEMIFLUID_API_KEY --auth-header x-api-key`.
 
 ## Plugin Authoring Notes
 

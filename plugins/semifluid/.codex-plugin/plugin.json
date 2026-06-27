@@ -1,7 +1,7 @@
 {
   "name": "semifluid",
-  "version": "0.2.0+codex.20260627162727",
-  "description": "Search, inspect, and manage Semifluid collections, schemas, records, attachments, and suggestions from Codex through the Semifluid HTTP API with plugin OAuth.",
+  "version": "0.2.0+codex.20260627164013",
+  "description": "Search, inspect, and manage Semifluid collections, schemas, records, attachments, and suggestions from Codex through authenticated Semifluid plugin tools.",
   "author": {
     "name": "Local developer"
   },
@@ -11,8 +11,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Semifluid",
-    "shortDescription": "Search and manage Semifluid data through the API.",
-    "longDescription": "Adds Semifluid API guidance and a bundled helper for OAuth-backed collection, schema, record, attachment, event, intake form, webhook, and suggestion operations.",
+    "shortDescription": "Search and manage Semifluid data.",
+    "longDescription": "Adds Semifluid guidance for authenticated collection, schema, record, attachment, event, intake form, webhook, and suggestion operations, plus a bundled HTTP helper for public endpoints and explicit compatibility credentials.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [

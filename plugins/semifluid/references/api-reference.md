@@ -14,9 +14,10 @@ JSON spec: `https://api.semifluid.ai/api-reference/spec.json`
 
 YAML spec: `https://api.semifluid.ai/api-reference/spec.yaml`
 
-Auth: the plugin helper sends OAuth bearer credentials as `Authorization: Bearer <token>` by
-default. API-key auth is available only as an explicit compatibility mode with
-`--auth-header x-api-key`.
+Auth: normal authenticated Codex plugin operations should use the Semifluid MCP tools, where Codex
+manages OAuth for tool calls. The HTTP helper can send `Authorization: Bearer <token>` only when a
+bearer token is explicitly supplied in the shell environment. API-key auth is available only as an
+explicit compatibility mode with `--auth-header x-api-key`.
 
 The helper reports each API request duration to stderr as `Timing: METHOD /path -> HTTP status in N.N ms`, while response bodies remain on stdout.
 

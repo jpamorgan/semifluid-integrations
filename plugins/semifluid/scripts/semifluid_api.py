@@ -46,8 +46,11 @@ def get_oauth_token() -> str:
     if not token:
         names = ", ".join(OAUTH_TOKEN_ENV_VARS)
         raise SystemExit(
-            "Missing Semifluid OAuth token. Reconnect or reauthorize the Semifluid "
-            f"plugin, then retry in a new thread where Codex exposes one of: {names}."
+            "Missing Semifluid bearer token. Codex MCP OAuth does not expose plugin "
+            "access tokens to helper subprocesses. For direct shell API calls, set "
+            f"one of: {names}. For normal authenticated plugin work, use the "
+            "Semifluid MCP tools; if those report Auth required, reconnect or "
+            "reauthorize the Semifluid plugin and retry in a new thread."
         )
     return token
 
@@ -57,7 +60,7 @@ def get_api_key() -> str:
     if not key:
         raise SystemExit(
             "Missing SEMIFLUID_API_KEY. API-key auth is only a compatibility mode; "
-            "use the plugin OAuth token path for normal Semifluid plugin work."
+            "use Semifluid MCP tools for normal authenticated plugin work."
         )
     return key
 
