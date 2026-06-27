@@ -5,8 +5,10 @@ This is the installable Codex plugin bundle for Semifluid.
 ## Contents
 
 - `.codex-plugin/plugin.json`: required Codex plugin manifest.
-- `.mcp.json`: bundled MCP server config for `https://api.semifluid.ai/mcp`.
-- `skills/semifluid/SKILL.md`: Codex guidance for Semifluid retrieval and mutations.
+- `.mcp.json`: OAuth bootstrap for Semifluid plugin authentication.
+- `skills/semifluid/SKILL.md`: Codex guidance for API-first Semifluid retrieval and mutations.
+- `scripts/semifluid_api.py`: standard-library Semifluid HTTP API helper.
+- `references/api-reference.md`: local endpoint reference copied from the v1 API skill.
 
 ## Install
 
@@ -22,24 +24,29 @@ Or from GitHub:
 codex plugin marketplace add jpamorgan/semifluid-integrations
 ```
 
-Then open Codex, choose the `Semifluid Integrations` marketplace, install `Semifluid`, and start a
-new thread.
+Then open Codex, choose the `Semifluid Integrations` marketplace, install `Semifluid`, authenticate
+with Semifluid, and start a new thread.
 
-## MCP Server
+## API Helper
 
-The bundled MCP server is remote and OAuth-protected:
+Semifluid operations should use the bundled helper:
 
-```text
-https://api.semifluid.ai/mcp
+```bash
+python3 scripts/semifluid_api.py health
+python3 scripts/semifluid_api.py get /v1/collections
+python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 ```
 
-Codex should use the tools exposed by that server instead of direct REST calls.
+The helper sends `Authorization: Bearer <token>` by default and reads the OAuth token from
+`SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
 ## Plugin Authoring Notes
 
 - The folder name, manifest `name`, marketplace plugin entry, and skill namespace should stay
   aligned as `semifluid`.
 - Keep bundled plugin files at the plugin root, except for `.codex-plugin/plugin.json`.
-- Keep `.mcp.json` in the `mcpServers` companion shape validated by the local Codex plugin tooling.
+- Keep `.mcp.json` only for plugin OAuth bootstrap unless Codex adds a first-class script OAuth
+  mechanism.
 - Keep starter prompts short and limit them to the first three useful examples.
-- Restart Codex and test in a fresh thread after changing manifest, skill, or MCP config files.
+- Restart Codex and test in a fresh thread after changing manifest, skill, script, or auth config
+  files.
