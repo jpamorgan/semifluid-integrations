@@ -33,11 +33,14 @@ Semifluid operations should use the bundled helper:
 
 ```bash
 python3 scripts/semifluid_api.py health
+python3 scripts/semifluid_api.py auth login
 python3 scripts/semifluid_api.py get /v1/collections
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 ```
 
-The helper sends `Authorization: Bearer <token>` by default and reads the OAuth token from
+The helper sends `Authorization: Bearer <token>` by default. Run `auth login` once to authorize via
+Semifluid OAuth; the helper stores credentials in a local cache and refreshes access tokens when
+possible. For automation, the helper also accepts explicit bearer token overrides from
 `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
 ## Plugin Authoring Notes
@@ -45,8 +48,8 @@ The helper sends `Authorization: Bearer <token>` by default and reads the OAuth 
 - The folder name, manifest `name`, marketplace plugin entry, and skill namespace should stay
   aligned as `semifluid`.
 - Keep bundled plugin files at the plugin root, except for `.codex-plugin/plugin.json`.
-- Keep `.mcp.json` only for plugin OAuth bootstrap unless Codex adds a first-class script OAuth
-  mechanism.
+- Keep `.mcp.json` only for Codex plugin OAuth bootstrap. The API helper owns a separate OAuth
+  authorization-code cache for direct shell API calls.
 - Keep starter prompts short and limit them to the first three useful examples.
 - Restart Codex and test in a fresh thread after changing manifest, skill, script, or auth config
   files.
