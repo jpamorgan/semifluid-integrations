@@ -15,7 +15,8 @@ JSON spec: `https://api.semifluid.ai/api-reference/spec.json`
 YAML spec: `https://api.semifluid.ai/api-reference/spec.yaml`
 
 Auth: the plugin helper sends OAuth bearer credentials as `Authorization: Bearer <token>` by
-default. API-key auth is available only as an explicit compatibility mode with
+default. Run `python3 scripts/semifluid_api.py auth login` once to authorize and cache OAuth
+credentials. API-key auth is available only as an explicit compatibility mode with
 `--auth-header x-api-key`.
 
 The helper reports each API request duration to stderr as `Timing: METHOD /path -> HTTP status in N.N ms`, while response bodies remain on stdout.
@@ -30,6 +31,7 @@ Use `key` for client-defined record keys. Use `recordId` only for Semifluid UUID
 
 ```bash
 python3 scripts/semifluid_api.py health
+python3 scripts/semifluid_api.py auth login
 python3 scripts/semifluid_api.py operations
 python3 scripts/semifluid_api.py get /v1/collections
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}

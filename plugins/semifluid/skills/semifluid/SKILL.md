@@ -20,8 +20,15 @@ python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --qu
 python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json '{"limit":10,"search":"search text","fields":"*"}'
 ```
 
-The helper uses plugin OAuth bearer auth by default. It expects Codex/plugin auth to expose one of
-these environment variables: `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or
+The helper uses OAuth bearer auth by default. If no token is cached yet, authorize the helper once:
+
+```bash
+python3 scripts/semifluid_api.py auth login
+python3 scripts/semifluid_api.py auth status
+```
+
+The helper caches OAuth credentials locally and refreshes access tokens when possible. It also
+accepts explicit bearer token overrides from `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or
 `CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
 Do not use Semifluid MCP tools for normal Semifluid operations. Do not ask the user for an API key
@@ -33,6 +40,7 @@ Run commands from this skill directory or pass the absolute script path:
 
 ```bash
 python3 scripts/semifluid_api.py health
+python3 scripts/semifluid_api.py auth login
 python3 scripts/semifluid_api.py operations
 python3 scripts/semifluid_api.py get /v1/collections
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}
@@ -81,7 +89,8 @@ Expected efficient paths:
    - Summarize Semifluid content concisely and mention the collection, record, or endpoint when useful.
 4. Handle errors directly.
    - For validation errors, adjust the payload from the endpoint schema or ask for missing required values.
-   - For auth/session errors, tell the user to reconnect or reauthorize the Semifluid plugin and retry in a new thread.
+   - For missing local OAuth credentials, run `python3 scripts/semifluid_api.py auth login`.
+   - For invalid or expired cached OAuth credentials, run `python3 scripts/semifluid_api.py auth login` again.
 
 ## Mutation Rules
 
@@ -99,6 +108,8 @@ Expected efficient paths:
 
 - The helper uses only Python standard library modules.
 - Authenticated requests send `Authorization: Bearer <token>` by default.
+- Run `python3 scripts/semifluid_api.py auth login` to create the local OAuth cache used by API calls.
+- Run `python3 scripts/semifluid_api.py auth logout` to remove cached OAuth credentials.
 - Set `SEMIFLUID_API_TRACE=/path/to/trace.jsonl` or pass `--trace-output /path/to/trace.jsonl` to append machine-readable request timing events.
 - Trace events never include OAuth tokens, API keys, request bodies, response bodies, or query values.
 - Use `--no-auth` only for public endpoints such as `/v1/health`.
@@ -109,6 +120,5 @@ Expected efficient paths:
 
 - Never ask the user for an API key in chat.
 - Never print or store credentials.
-- If the helper reports a missing OAuth token, tell the user to reconnect or reauthorize the
-  Semifluid plugin and retry in a new thread.
+- If the helper reports a missing OAuth token, run `python3 scripts/semifluid_api.py auth login`.
 - Do not fall back to MCP tools after API auth, validation, or search failures.
