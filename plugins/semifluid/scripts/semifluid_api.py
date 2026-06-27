@@ -18,7 +18,7 @@ from typing import Any
 
 DEFAULT_BASE_URL = "https://api.semifluid.ai"
 TRACE_ENV = "SEMIFLUID_API_TRACE"
-OAUTH_TOKEN_ENV_VARS = (
+BEARER_TOKEN_ENV_VARS = (
     "SEMIFLUID_ACCESS_TOKEN",
     "SEMIFLUID_OAUTH_TOKEN",
     "CODEX_SEMIFLUID_ACCESS_TOKEN",
@@ -41,10 +41,10 @@ def token_from_env(names: tuple[str, ...]) -> str | None:
     return None
 
 
-def get_oauth_token() -> str:
-    token = token_from_env(OAUTH_TOKEN_ENV_VARS)
+def get_bearer_token() -> str:
+    token = token_from_env(BEARER_TOKEN_ENV_VARS)
     if not token:
-        names = ", ".join(OAUTH_TOKEN_ENV_VARS)
+        names = ", ".join(BEARER_TOKEN_ENV_VARS)
         raise SystemExit(
             "Missing Semifluid bearer token. Codex MCP OAuth does not expose plugin "
             "access tokens to helper subprocesses. For direct shell API calls, set "
@@ -159,7 +159,7 @@ def request(
         if auth_header == "x-api-key":
             headers["x-api-key"] = get_api_key()
         elif auth_header == "bearer":
-            headers["Authorization"] = f"Bearer {get_oauth_token()}"
+            headers["Authorization"] = f"Bearer {get_bearer_token()}"
         else:
             raise SystemExit(f"Unsupported auth header mode: {auth_header}")
 

@@ -29,7 +29,7 @@ class SemifluidApiAuthTests(unittest.TestCase):
 
         with mock.patch.dict(os.environ, {}, clear=True):
             with self.assertRaises(SystemExit) as raised:
-                helper.get_oauth_token()
+                helper.get_bearer_token()
 
         message = str(raised.exception)
         self.assertIn("Codex MCP OAuth does not expose plugin access tokens", message)
