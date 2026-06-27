@@ -6,7 +6,7 @@ Last refreshed from source: `2026-06-27`
 
 OpenAPI: `3.1.1`
 
-API version: `0.1.198`
+API version: `0.1.203`
 
 Base URL: `https://api.semifluid.ai`
 
@@ -42,9 +42,12 @@ python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/records --j
 python3 scripts/semifluid_api.py patch /v1/collections/{collectionId}/records --json @records-update.json
 python3 scripts/semifluid_api.py put /v1/collections/{collectionId}/records --json @records-upsert.json
 python3 scripts/semifluid_api.py post /v1/attachments --json @attachment.json
+python3 scripts/semifluid_api.py get /v1/attachments/{attachmentId}/content --output ./attachment.bin
 python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/record-imports --json @csv-import.json
 python3 scripts/semifluid_api.py get /v1/events --query limit=10 --query direction=desc
+python3 scripts/semifluid_api.py get /v1/events/stream --query collectionId={collectionId}
 python3 scripts/semifluid_api.py get /v1/intake-forms --query collectionId={collectionId}
+python3 scripts/semifluid_api.py post /v1/profile/avatar --json @avatar.json
 python3 scripts/semifluid_api.py get /v1/webhooks
 python3 scripts/semifluid_api.py post /v1/webhooks --json @webhook.json
 ```
@@ -61,6 +64,7 @@ python3 scripts/semifluid_api.py post /v1/webhooks --json @webhook.json
 | POST | `/v1/api-keys/{apiKeyId}/secret-rotations` | `CreateApiKeySecretRotation` | Rotate workspace API key secret |
 | POST | `/v1/attachments` | `UploadAttachment` | Upload attachment |
 | GET | `/v1/attachments/{attachmentId}` | `GetAttachment` | Get attachment metadata |
+| GET | `/v1/attachments/{attachmentId}/content` | `GetAttachmentContent` | Download attachment content |
 | GET | `/v1/collections` | `ListCollections` | List collections |
 | POST | `/v1/collections` | `CreateCollection` | Create collection |
 | DELETE | `/v1/collections/{collectionId}` | `DeleteCollection` | Soft-delete collection |
@@ -90,6 +94,7 @@ python3 scripts/semifluid_api.py post /v1/webhooks --json @webhook.json
 | DELETE | `/v1/collections/{collectionId}/views/{viewId}` | `DeleteCollectionView` | Delete collection view |
 | PATCH | `/v1/collections/{collectionId}/views/{viewId}` | `UpdateSavedCollectionView` | Update collection view |
 | GET | `/v1/events` | `ListEvents` | List events |
+| GET | `/v1/events/stream` | `StreamEvents` | Stream workspace or collection events |
 | GET | `/v1/health` | `HealthCheck` | Health check |
 | GET | `/v1/intake-forms` | `ListIntakeForms` | List intake forms |
 | POST | `/v1/intake-forms` | `CreateIntakeForm` | Create intake form |
@@ -108,6 +113,9 @@ python3 scripts/semifluid_api.py post /v1/webhooks --json @webhook.json
 | GET | `/v1/public/shared-collections/{publicShareToken}/records` | `ListPublicShareRecords` | List public share records |
 | POST | `/v1/public/shared-collections/{publicShareToken}/records/query` | `QueryPublicShareRecords` | Query public share records |
 | GET | `/v1/public/shared-collections/{publicShareToken}/records/{recordId}` | `GetPublicShareRecord` | Get public share record |
+| GET | `/v1/public/shared-collections/{publicShareToken}/attachments/{attachmentId}/content` | `GetPublicShareAttachmentContent` | Download public share attachment content |
+| POST | `/v1/profile/avatar` | `UploadProfileAvatar` | Upload profile avatar |
+| GET | `/v1/profile/avatar/{avatarId}/content` | `GetProfileAvatarContent` | Download profile avatar content |
 | GET | `/v1/record-suggestions` | `ListRecordSuggestions` | List suggestions |
 | POST | `/v1/record-suggestions` | `CreateRecordSuggestion` | Suggest a record change |
 | GET | `/v1/record-suggestions/{suggestionId}` | `GetRecordSuggestion` | Get suggestion |
@@ -123,13 +131,14 @@ python3 scripts/semifluid_api.py post /v1/webhooks --json @webhook.json
 ## Parameters
 
 - All API routes from the spec are versioned under `/v1`. Only `/api-reference/spec.json` and `/api-reference/spec.yaml` are unversioned helper/reference routes.
-- UUID path parameters include `collectionId`, `recordId`, `fieldId`, `attachmentId`, `viewId`, `publicShareId`, `intakeFormId`, `suggestionId`, and `webhookId`.
+- UUID path parameters include `collectionId`, `recordId`, `fieldId`, `attachmentId`, `viewId`, `publicShareId`, `intakeFormId`, `suggestionId`, and `webhookId`. `avatarId` and public attachment content IDs are string path parameters.
 - `apiKeyId` is a non-empty string. `publicShareToken` is a 43-character URL-safe token matching `^[A-Za-z0-9_-]{43}$`; `intakeFormToken` is a public token string from 32 to 256 characters.
 - List endpoints generally default `limit` to `50` and cap `limit` at `100`; webhook deliveries default to `20` and cap at `50`.
 - Record read and write endpoints support `fields: "*"` or an array of up to 100 field keys. For GET query strings, pass `--query fields='*'`; for POST/PATCH/PUT requests, include `fields` in the JSON body.
 - Field keys in record values must match `^[A-Za-z_][A-Za-z0-9_]*$`.
 - `POST /v1/attachments` accepts `collectionId`, `name`, optional `mimeType`, and `dataBase64` up to 34,952,536 characters.
 - `GET /v1/events` supports `limit`, `cursor`, `includePayload`, `direction=asc|desc`, `collectionId`, `recordId`, `operation`, `entityType`, and `entityId`; `direction` defaults to `asc`.
+- `GET /v1/events/stream` returns `text/event-stream` and supports `collectionId`, `cursor`, and the `Last-Event-ID` header.
 - `GET /v1/webhooks` accepts optional `collectionId`; `GET /v1/webhooks/{webhookId}/deliveries` accepts optional `limit`.
 
 ## API Keys
@@ -340,7 +349,7 @@ Upload an attachment before storing it in an attachment field:
 }
 ```
 
-Use `POST /v1/attachments`. Get attachment metadata with `GET /v1/attachments/{attachmentId}`. Attachment field values use arrays of the attachment metadata returned by upload:
+Use `POST /v1/attachments`. Get attachment metadata with `GET /v1/attachments/{attachmentId}` and download bytes with `GET /v1/attachments/{attachmentId}/content --output ./file.bin`. Attachment field values use arrays of the attachment metadata returned by upload:
 
 ```json
 {
@@ -650,6 +659,7 @@ Public share read endpoints use a `publicShareToken` and do not require workspac
 - `GET /v1/public/shared-collections/{publicShareToken}/records/{recordId}`
 - `POST /v1/public/shared-collections/{publicShareToken}/records/query`
 - `POST /v1/public/shared-collections/{publicShareToken}/record-aggregations`
+- `GET /v1/public/shared-collections/{publicShareToken}/attachments/{attachmentId}/content`
 
 When using the helper for public read endpoints, pass `--no-auth` unless the user explicitly wants to send workspace credentials. Public share record query and aggregation request bodies match the authenticated collection record query and aggregation bodies.
 
@@ -722,6 +732,30 @@ python3 scripts/semifluid_api.py get /v1/events --query limit=50 --query directi
 ```
 
 Query parameters: `limit`, `cursor`, `includePayload`, `direction=asc|desc`, `collectionId`, `recordId`, `operation`, `entityType`, and `entityId`.
+
+Stream events with `GET /v1/events/stream`. The stream returns `text/event-stream`, accepts optional `collectionId`, `cursor`, and `Last-Event-ID`, and stays open while events are delivered:
+
+```bash
+python3 scripts/semifluid_api.py get /v1/events/stream --query collectionId=00000000-0000-0000-0000-000000000000
+```
+
+## Profile Avatar
+
+Upload a profile avatar with `POST /v1/profile/avatar`:
+
+```json
+{
+  "name": "avatar.png",
+  "mimeType": "image/png",
+  "dataBase64": "<base64 image contents>"
+}
+```
+
+The upload body requires `name`, `mimeType`, and `dataBase64`; `dataBase64` is capped at 6,990,508 characters. Download avatar bytes with:
+
+```bash
+python3 scripts/semifluid_api.py get /v1/profile/avatar/{avatarId}/content --output ./avatar.bin
+```
 
 For exact schemas, run:
 

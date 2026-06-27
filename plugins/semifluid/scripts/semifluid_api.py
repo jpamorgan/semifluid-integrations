@@ -507,7 +507,10 @@ def request(
     auth_header: str,
     trace_output: str | None,
 ) -> tuple[int, bytes, Any]:
-    headers = {"Accept": "application/json", "User-Agent": "codex-semifluid-api/1.0"}
+    headers = {
+        "Accept": "application/json, application/octet-stream, text/event-stream, */*",
+        "User-Agent": "codex-semifluid-api/1.0",
+    }
     if body is not None:
         headers["Content-Type"] = "application/json"
     if not no_auth:

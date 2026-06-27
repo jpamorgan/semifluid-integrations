@@ -47,9 +47,12 @@ python3 scripts/semifluid_api.py get /v1/collections/{collectionId}
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json @query.json
 python3 scripts/semifluid_api.py post /v1/attachments --json @attachment.json
+python3 scripts/semifluid_api.py get /v1/attachments/{attachmentId}/content --output ./attachment.bin
 python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/record-imports --json @csv-import.json
 python3 scripts/semifluid_api.py get /v1/events --query limit=10 --query direction=desc
+python3 scripts/semifluid_api.py get /v1/events/stream --query collectionId={collectionId}
 python3 scripts/semifluid_api.py get /v1/intake-forms --query collectionId={collectionId}
+python3 scripts/semifluid_api.py post /v1/profile/avatar --json @avatar.json
 python3 scripts/semifluid_api.py get /v1/webhooks
 ```
 
@@ -70,8 +73,11 @@ Expected efficient paths:
 - Find a collection by name, then read records: `get /v1/collections`, then one records command.
 - Query records: one `post /v1/collections/{collectionId}/records/query --json @query.json` command.
 - Upload an attachment: one `post /v1/attachments --json @attachment.json` command after building a request body with `collectionId`, `name`, optional `mimeType`, and `dataBase64`.
+- Download an attachment: one `get /v1/attachments/{attachmentId}/content --output path` command.
 - Import CSV records: one `post /v1/collections/{collectionId}/record-imports --json @csv-import.json` command after building a request body with `csv`, optional `headerRow`, optional `columns`, and optional `validateOnly`.
 - List events: one `get /v1/events --query limit=N --query direction=desc` command; add `--query collectionId=...` for a collection-scoped list.
+- Stream events: only when the user asks for live event monitoring, call `get /v1/events/stream`; it returns `text/event-stream` and can remain open.
+- Upload a profile avatar: one `post /v1/profile/avatar --json @avatar.json` command after building a body with `name`, `mimeType`, and `dataBase64`.
 - List webhooks: one `get /v1/webhooks` command; add `--query collectionId=...` for a collection-scoped list.
 - Simple record/field/collection write: make the smallest read-only request needed to identify the target, write with `--json @file.json`, then report the result.
 
