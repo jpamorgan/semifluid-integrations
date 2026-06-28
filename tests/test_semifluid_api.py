@@ -1,4 +1,5 @@
 import importlib.util
+import io
 import json
 import os
 import tempfile
@@ -116,6 +117,49 @@ class SemifluidApiAuthTests(unittest.TestCase):
         self.assertIn("auth login", message)
         self.assertIn("SEMIFLUID_ACCESS_TOKEN", message)
         self.assertNotIn("retry in a new thread", message)
+
+
+class SemifluidCollectionsListTests(unittest.TestCase):
+    def setUp(self):
+        self.helper = load_helper_module()
+
+    def test_collections_list_names_auto_pages(self):
+        responses = [
+            (
+                200,
+                json.dumps(
+                    {
+                        "data": [{"name": "First"}, {"name": "Second"}],
+                        "pageInfo": {"hasNextPage": True, "nextCursor": "cursor-2"},
+                    }
+                ).encode(),
+                {},
+            ),
+            (
+                200,
+                json.dumps(
+                    {
+                        "data": [{"name": "Third"}],
+                        "pageInfo": {"hasNextPage": False, "nextCursor": None},
+                    }
+                ).encode(),
+                {},
+            ),
+        ]
+        args = self.helper.build_parser().parse_args(["collections", "list", "--names", "--quiet"])
+        stdout = io.StringIO()
+
+        with (
+            mock.patch.object(self.helper, "request", side_effect=responses) as request,
+            mock.patch("sys.stdout", stdout),
+        ):
+            self.assertEqual(self.helper.run_collections_list(args), 0)
+
+        self.assertEqual(stdout.getvalue(), "First\nSecond\nThird\n")
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(request.call_args_list[0].kwargs["query"], [])
+        self.assertEqual(request.call_args_list[1].kwargs["query"], [("cursor", "cursor-2")])
+        self.assertTrue(request.call_args_list[0].kwargs["quiet"])
 
 
 if __name__ == "__main__":

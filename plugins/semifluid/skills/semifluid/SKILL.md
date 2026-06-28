@@ -10,12 +10,15 @@ Semifluid HTTP API helper, not through Semifluid MCP tools.
 
 ## Core Rule
 
-Use `scripts/semifluid_api.py` first for Semifluid work:
+Use the plugin-root helper at `scripts/semifluid_api.py` first for Semifluid work. From a repository
+checkout, run it as `python3 plugins/semifluid/scripts/semifluid_api.py`; from an installed plugin
+bundle root, run it as `python3 scripts/semifluid_api.py`.
 
 ```bash
 python3 scripts/semifluid_api.py health
 python3 scripts/semifluid_api.py operations
 python3 scripts/semifluid_api.py get /v1/collections
+python3 scripts/semifluid_api.py collections list --names
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json '{"limit":10,"search":"search text","fields":"*"}'
 ```
@@ -31,18 +34,22 @@ The helper caches OAuth credentials locally and refreshes access tokens when pos
 accepts explicit bearer token overrides from `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or
 `CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
-Do not use Semifluid MCP tools for normal Semifluid operations. Do not ask the user for an API key
-in chat. API-key auth exists only as an explicit compatibility mode in the helper.
+Do not use Semifluid MCP tools for normal Semifluid operations after this skill is loaded. MCP
+metadata remains available for plugin OAuth bootstrap and broad retrieval surfaces, but direct
+Semifluid collection, schema, record, attachment, event, webhook, intake form, and suggestion work
+should go through the helper. Do not ask the user for an API key in chat. API-key auth exists only
+as an explicit compatibility mode in the helper.
 
 ## Quick Start
 
-Run commands from this skill directory or pass the absolute script path:
+Run commands from the plugin bundle root or pass the helper's absolute script path:
 
 ```bash
 python3 scripts/semifluid_api.py health
 python3 scripts/semifluid_api.py auth login
 python3 scripts/semifluid_api.py operations
 python3 scripts/semifluid_api.py get /v1/collections
+python3 scripts/semifluid_api.py collections list --names
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 python3 scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json @query.json
@@ -57,6 +64,7 @@ python3 scripts/semifluid_api.py get /v1/webhooks
 ```
 
 Use `--json @file.json` for request bodies that are too large or sensitive for the command line.
+Use `--quiet` when a script or agent needs response output without timing lines on stderr.
 
 ## Fast Path
 
@@ -68,7 +76,11 @@ uncommon endpoint.
 Expected efficient paths:
 
 - Health check: one `health` command.
-- List collections: one `get /v1/collections` command.
+- List collection names only: one `collections list --names` command. This auto-pages and emits
+  only names, one per line.
+- List full collection metadata: one `collections list` command. This auto-pages and returns a
+  combined response. Use raw `get /v1/collections` only when a single API page or exact endpoint
+  response shape is required.
 - Show records from a known collection: one `get /v1/collections/{collectionId}/records --query limit=N --query fields='*'` command.
 - Find a collection by name, then read records: `get /v1/collections`, then one records command.
 - Query records: one `post /v1/collections/{collectionId}/records/query --json @query.json` command.
@@ -93,6 +105,8 @@ Expected efficient paths:
 3. Ground answers in returned API data.
    - Do not claim exact details from memory or a guessed schema.
    - Summarize Semifluid content concisely and mention the collection, record, or endpoint when useful.
+   - Fetch and expose the least data needed to answer. For example, use `collections list --names`
+     for "list my collections by name" instead of dumping IDs, metadata, timestamps, or field layout.
 4. Handle errors directly.
    - For validation errors, adjust the payload from the endpoint schema or ask for missing required values.
    - For missing local OAuth credentials, run `python3 scripts/semifluid_api.py auth login`.

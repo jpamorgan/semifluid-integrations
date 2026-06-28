@@ -35,13 +35,16 @@ Semifluid operations should use the bundled helper:
 python3 scripts/semifluid_api.py health
 python3 scripts/semifluid_api.py auth login
 python3 scripts/semifluid_api.py get /v1/collections
+python3 scripts/semifluid_api.py collections list --names
 python3 scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 ```
 
-The helper sends `Authorization: Bearer <token>` by default. Run `auth login` once to authorize via
-Semifluid OAuth; the helper stores credentials in a local cache and refreshes access tokens when
-possible. For automation, the helper also accepts explicit bearer token overrides from
-`SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
+The helper sends `Authorization: Bearer <token>` by default. `collections list` follows pagination
+automatically, and `--names` emits only collection names for name-only requests. Run `auth login`
+once to authorize via Semifluid OAuth; the helper stores credentials in a local cache and refreshes
+access tokens when possible. For automation, the helper also accepts explicit bearer token
+overrides from `SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or
+`CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
 ## Plugin Authoring Notes
 

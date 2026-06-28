@@ -506,6 +506,7 @@ def request(
     no_auth: bool,
     auth_header: str,
     trace_output: str | None,
+    quiet: bool = False,
 ) -> tuple[int, bytes, Any]:
     headers = {
         "Accept": "application/json, application/octet-stream, text/event-stream, */*",
@@ -543,7 +544,8 @@ def request(
         raise
     finally:
         elapsed_seconds = time.perf_counter() - start
-        emit_timing(method, path, status, elapsed_seconds)
+        if not quiet:
+            emit_timing(method, path, status, elapsed_seconds)
         write_trace_event(
             trace_output,
             method=method,
@@ -579,6 +581,110 @@ def emit_response(status: int, body: bytes, output: str | None) -> None:
     print(json.dumps(parsed, indent=2, sort_keys=True))
 
 
+def emit_text(text: str, output: str | None) -> None:
+    body = text.encode()
+    if output:
+        Path(output).write_bytes(body)
+        print(f"Wrote {len(body)} bytes to {output}")
+        return
+    print(text, end="")
+
+
+def require_json_object(body: bytes, context: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(body)
+    except json.JSONDecodeError as error:
+        raise SystemExit(f"Expected JSON object from {context}") from error
+    if not isinstance(parsed, dict):
+        raise SystemExit(f"Expected JSON object from {context}")
+    return parsed
+
+
+def collection_page_items(page: dict[str, Any]) -> list[dict[str, Any]]:
+    data = page.get("data")
+    if not isinstance(data, list):
+        raise SystemExit("Expected collection list response to include a data array.")
+    items: list[dict[str, Any]] = []
+    for item in data:
+        if not isinstance(item, dict):
+            raise SystemExit("Expected each collection item to be an object.")
+        items.append(item)
+    return items
+
+
+def next_page_cursor(page: dict[str, Any]) -> str | None:
+    page_info = page.get("pageInfo")
+    if not isinstance(page_info, dict):
+        return None
+    next_cursor = page_info.get("nextCursor")
+    if page_info.get("hasNextPage") and isinstance(next_cursor, str) and next_cursor:
+        return next_cursor
+    return None
+
+
+def query_with_cursor(query: list[tuple[str, str]], cursor: str | None) -> list[tuple[str, str]]:
+    without_cursor = [(key, value) for key, value in query if key != "cursor"]
+    if cursor is None:
+        existing_cursor = next((value for key, value in query if key == "cursor"), None)
+        return without_cursor + ([("cursor", existing_cursor)] if existing_cursor else [])
+    return without_cursor + [("cursor", cursor)]
+
+
+def fetch_all_collections(args: argparse.Namespace) -> list[dict[str, Any]]:
+    query = parse_query(args.query)
+    cursor: str | None = None
+    collections: list[dict[str, Any]] = []
+
+    while True:
+        status, response_body, _headers = request(
+            "GET",
+            "/v1/collections",
+            base_url=args.base_url,
+            query=query_with_cursor(query, cursor),
+            body=None,
+            no_auth=args.no_auth,
+            auth_header=args.auth_header,
+            trace_output=args.trace_output,
+            quiet=args.quiet,
+        )
+        if status != 200:
+            raise SystemExit(f"HTTP {status}")
+        page = require_json_object(response_body, "/v1/collections")
+        collections.extend(collection_page_items(page))
+        cursor = next_page_cursor(page)
+        if cursor is None:
+            return collections
+
+
+def run_collections_list(args: argparse.Namespace) -> int:
+    try:
+        collections = fetch_all_collections(args)
+    except ApiError as error:
+        print(f"HTTP {error.status}", file=sys.stderr)
+        if error.body:
+            try:
+                parsed = json.loads(error.body)
+                print(json.dumps(parsed, indent=2, sort_keys=True), file=sys.stderr)
+            except json.JSONDecodeError:
+                print(error.body.decode(errors="replace"), file=sys.stderr)
+        return 1
+
+    if args.names:
+        names = [str(item["name"]) for item in collections if isinstance(item.get("name"), str)]
+        emit_text("".join(f"{name}\n" for name in names), args.output)
+        return 0
+
+    payload = {
+        "data": collections,
+        "pageInfo": {
+            "hasNextPage": False,
+            "nextCursor": None,
+        },
+    }
+    emit_response(200, json.dumps(payload).encode(), args.output)
+    return 0
+
+
 def run_request(args: argparse.Namespace) -> int:
     method = args.method.upper()
     body = load_json_arg(args.json)
@@ -592,6 +698,7 @@ def run_request(args: argparse.Namespace) -> int:
             no_auth=args.no_auth,
             auth_header=args.auth_header,
             trace_output=args.trace_output,
+            quiet=args.quiet,
         )
         emit_response(status, response_body, args.output)
         return 0
@@ -636,6 +743,7 @@ def run_operations(args: argparse.Namespace) -> int:
             no_auth=True,
             auth_header=args.auth_header,
             trace_output=args.trace_output,
+            quiet=args.quiet,
         )
     except ApiError as error:
         print(f"HTTP {error.status}", file=sys.stderr)
@@ -664,6 +772,7 @@ def add_request_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--no-auth", action="store_true")
     parser.add_argument("--auth-header", choices=["bearer", "x-api-key"], default="bearer")
     parser.add_argument("--trace-output", help=f"Append trace JSONL events. Also configurable with {TRACE_ENV}.")
+    parser.add_argument("--quiet", action="store_true", help="Suppress timing output on stderr")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -699,7 +808,16 @@ def build_parser() -> argparse.ArgumentParser:
     operations.add_argument("--base-url", default=DEFAULT_BASE_URL)
     operations.add_argument("--auth-header", choices=["bearer", "x-api-key"], default="bearer")
     operations.add_argument("--trace-output", help=f"Append trace JSONL events. Also configurable with {TRACE_ENV}.")
+    operations.add_argument("--quiet", action="store_true", help="Suppress timing output on stderr")
     operations.set_defaults(func=run_operations)
+
+    collections = subparsers.add_parser("collections", help="Convenience helpers for collections")
+    collections_subparsers = collections.add_subparsers(dest="collections_command", required=True)
+
+    collections_list = collections_subparsers.add_parser("list", help="List all collections with pagination")
+    collections_list.add_argument("--names", action="store_true", help="Print one collection name per line")
+    add_request_options(collections_list)
+    collections_list.set_defaults(func=run_collections_list)
 
     request_parser = subparsers.add_parser("request", help="Call any API path")
     request_parser.add_argument("method")

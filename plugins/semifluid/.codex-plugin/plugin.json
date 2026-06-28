@@ -1,6 +1,6 @@
 {
   "name": "semifluid",
-  "version": "0.2.0+codex.20260627170435",
+  "version": "0.2.0+codex.20260628165238",
   "description": "Search, inspect, and manage Semifluid collections, schemas, records, attachments, and suggestions from Codex through the Semifluid HTTP API with plugin OAuth.",
   "author": {
     "name": "Local developer"

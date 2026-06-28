@@ -55,7 +55,7 @@ Search my Semifluid collections for customer records.
 The thread should load the `semifluid` skill and use the bundled API helper:
 
 ```bash
-python3 scripts/semifluid_api.py get /v1/collections
+python3 plugins/semifluid/scripts/semifluid_api.py collections list --names
 ```
 
 If the helper reports a missing OAuth token, authorize the API helper:
@@ -101,14 +101,16 @@ The Codex plugin should operate through:
 python3 plugins/semifluid/scripts/semifluid_api.py health
 python3 plugins/semifluid/scripts/semifluid_api.py auth login
 python3 plugins/semifluid/scripts/semifluid_api.py get /v1/collections
+python3 plugins/semifluid/scripts/semifluid_api.py collections list --names
 python3 plugins/semifluid/scripts/semifluid_api.py get /v1/collections/{collectionId}/records --query limit=10 --query fields='*'
 python3 plugins/semifluid/scripts/semifluid_api.py post /v1/collections/{collectionId}/records/query --json @query.json
 ```
 
-The helper sends bearer auth by default. Run `auth login` once to authorize through Semifluid OAuth;
-the helper stores credentials in a local cache and refreshes access tokens when possible. For
-automation, the helper also accepts explicit bearer token overrides from `SEMIFLUID_ACCESS_TOKEN`,
-`SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
+The helper sends bearer auth by default. `collections list` follows pagination automatically, and
+`--names` emits only collection names for name-only requests. Run `auth login` once to authorize
+through Semifluid OAuth; the helper stores credentials in a local cache and refreshes access tokens
+when possible. For automation, the helper also accepts explicit bearer token overrides from
+`SEMIFLUID_ACCESS_TOKEN`, `SEMIFLUID_OAUTH_TOKEN`, or `CODEX_SEMIFLUID_ACCESS_TOKEN`.
 
 ## Maintenance Checklist
 
